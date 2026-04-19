@@ -84,9 +84,13 @@ body {
     font-size: 72px;
     font-weight: 800;
     margin: 0;
-    background: linear-gradient(45deg, #ff7e5f, #feb47b);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+   background: linear-gradient(45deg, #ff7e5f, #feb47b);
+
+/* ✅ Add this line */
+background-clip: text;
+
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
 }
 
 #desc {
@@ -153,4 +157,25 @@ body {
         gap: 5px;
         text-align: center;
     }
+    .auth {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.auth input {
+    padding: 10px;
+    margin: 5px;
+    border-radius: 8px;
+    border: none;
+}
+
+.auth button {
+    padding: 10px 15px;
+    margin: 5px;
+    border-radius: 8px;
+    border: none;
+    background: #0077b6;
+    color: white;
+    cursor: pointer;
+}
 }

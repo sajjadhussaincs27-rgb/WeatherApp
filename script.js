@@ -1,3 +1,7 @@
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 const apiKey = "efcd635efdb0886af41bb957c3cc5679";
 
 const result = document.getElementById("result");
@@ -96,4 +100,26 @@ async function getForecast(city) {
 
         forecastContainer.appendChild(card);
     });
+
+    window.signup = function () {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    createUserWithEmailAndPassword(window.auth, email, password)
+        .then(() => {
+            alert("Signup successful");
+        })
+        .catch(err => alert(err.message));
+};
+
+window.login = function () {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    signInWithEmailAndPassword(window.auth, email, password)
+        .then(() => {
+            alert("Login successful");
+        })
+        .catch(err => alert(err.message));
+};
 }
