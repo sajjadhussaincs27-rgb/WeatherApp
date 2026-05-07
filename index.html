@@ -1,69 +1,182 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Modern Weather App</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <title>Nimbus — Weather</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 </head>
-<body>
+<body class="day">
 
-<div class="card">
-
-    <h1>Weather App</h1>
-
-    <!-- 🔐 LOGIN -->
-    <div class="auth">
-        <input type="email" id="email" placeholder="Enter email">
-        <input type="password" id="password" placeholder="Enter password">
-        <div>
-            <button onclick="signup()">Sign Up</button>
-            <button onclick="login()">Login</button>
-        </div>
+  <!-- Animated sky background -->
+  <div class="sky">
+    <div class="clouds">
+      <div class="cloud c1"></div>
+      <div class="cloud c2"></div>
+      <div class="cloud c3"></div>
+      <div class="cloud c4"></div>
     </div>
-
-    <!-- 🌤 SEARCH -->
-    <div class="search">
-        <input type="text" id="cityInput" placeholder="Enter city name">
-        <button id="searchBtn">Search</button>
+    <div class="stars" id="stars"></div>
+    <div class="sun-moon" id="sunMoon">
+      <div class="sun"></div>
+      <div class="moon"></div>
     </div>
+    <div class="rain-container" id="rainContainer"></div>
+  </div>
 
-    <!-- 🌦 RESULT -->
-    <div id="result" class="result hidden">
-        <h2 id="city"></h2>
-        <h1 id="temp"></h1>
-        <img id="icon" alt="">
-        <p id="desc"></p>
+  <!-- MAIN APP -->
+  <div class="app" id="app">
 
-        <div class="details">
-            <p id="humidity"></p>
-            <p id="wind"></p>
+    <!-- ===== AUTH SCREEN ===== -->
+    <div class="screen" id="authScreen">
+      <div class="auth-card">
+        <div class="brand">
+          <span class="brand-icon">◎</span>
+          <h1>Nimbus</h1>
+          <p class="tagline">Your sky, decoded.</p>
         </div>
 
-        <div id="forecast" class="forecast"></div>
+        <div class="tab-row">
+          <button class="tab active" id="tabLogin" onclick="switchTab('login')">Login</button>
+          <button class="tab" id="tabSignup" onclick="switchTab('signup')">Sign Up</button>
+        </div>
+
+        <div class="field-group">
+          <div class="field">
+            <label>Email</label>
+            <input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email" />
+          </div>
+          <div class="field">
+            <label>Password</label>
+            <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password" />
+          </div>
+        </div>
+
+        <button class="btn-primary" id="authBtn" onclick="handleAuth()">
+          <span id="authBtnText">Login</span>
+          <span class="btn-loader hidden" id="authLoader"></span>
+        </button>
+
+        <p class="auth-error hidden" id="authError"></p>
+
+        <p class="auth-switch">
+          <span id="switchText">Don't have an account?</span>
+          <a href="#" onclick="switchTab(currentTab === 'login' ? 'signup' : 'login')">
+            <span id="switchLink">Sign up</span>
+          </a>
+        </p>
+      </div>
     </div>
 
-</div>
+    <!-- ===== WEATHER SCREEN ===== -->
+    <div class="screen hidden" id="weatherScreen">
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+      <!-- Top bar -->
+      <div class="topbar">
+        <div class="user-info">
+          <div class="avatar" id="userAvatar">U</div>
+          <span id="userEmail" class="user-email"></span>
+        </div>
+        <button class="logout-btn" onclick="logout()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAc43OgZ8ciimBTA-PFSSNMFD8qPEEW5NQ",
-    authDomain: "weather-app-b8629.firebaseapp.com",
-    projectId: "weather-app-b8629"
-  };
+      <!-- Search -->
+      <div class="search-bar">
+        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="cityInput" placeholder="Search city…" autocomplete="off" />
+        <button class="search-btn" onclick="searchCity()">Go</button>
+      </div>
 
-  const app = initializeApp(firebaseConfig);
-  window.auth = getAuth(app);
-  window.db = getFirestore(app);
-</script>
+      <!-- Main weather card -->
+      <div class="weather-card hidden" id="weatherCard">
 
-<script type="module" src="script.js"></script>
+        <!-- Location & time -->
+        <div class="wc-header">
+          <div class="location">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            <span id="cityName">—</span>
+          </div>
+          <span id="localTime" class="local-time"></span>
+        </div>
 
+        <!-- Temperature hero -->
+        <div class="temp-hero">
+          <div class="temp-block">
+            <span id="tempVal" class="temp-big">—</span>
+            <span class="temp-unit">°C</span>
+          </div>
+          <div class="weather-icon-wrap">
+            <img id="weatherIcon" src="" alt="" />
+            <p id="weatherDesc" class="wdesc">—</p>
+          </div>
+        </div>
+
+        <!-- Stats row -->
+        <div class="stats-row">
+          <div class="stat">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 0 1 7 7c0 4-7 13-7 13S5 13 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="3"/></svg>
+            <span id="humidity">—</span>
+            <label>Humidity</label>
+          </div>
+          <div class="stat">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></svg>
+            <span id="windSpeed">—</span>
+            <label>Wind</label>
+          </div>
+          <div class="stat">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            <span id="feelsLike">—</span>
+            <label>Feels Like</label>
+          </div>
+          <div class="stat">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            <span id="visibility">—</span>
+            <label>Visibility</label>
+          </div>
+        </div>
+
+        <!-- Forecast -->
+        <div class="forecast-section">
+          <h3 class="section-title">5-Day Forecast</h3>
+          <div class="forecast-row" id="forecastRow"></div>
+        </div>
+
+      </div>
+
+      <!-- Loading state -->
+      <div class="loading-state hidden" id="loadingState">
+        <div class="pulse-ring"></div>
+        <p>Fetching sky data…</p>
+      </div>
+
+      <!-- Error state -->
+      <div class="error-state hidden" id="errorState">
+        <span class="error-icon">⚠</span>
+        <p id="errorMsg">City not found.</p>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAc43OgZ8ciimBTA-PFSSNMFD8qPEEW5NQ",
+      authDomain: "weather-app-b8629.firebaseapp.com",
+      projectId: "weather-app-b8629"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    window._auth = getAuth(app);
+  </script>
+
+  <script type="module" src="script.js"></script>
 </body>
 </html>
